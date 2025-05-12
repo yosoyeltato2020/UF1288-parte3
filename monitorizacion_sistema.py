@@ -1,41 +1,36 @@
 import psutil
-import os
 import time
 
-def mostrar_uso_cpu():
-    time.sleep(2)  # Espera 2 segundos antes de medir el uso de CPU
-    uso_cpu = psutil.cpu_percent()  
-    print(f"USO CPU: {uso_cpu}%")
+def obtener_procesos():
+    procesos = list(psutil.process_iter(['pid', 'name', 'cpu_percent']))
+    return procesos
 
-def mostrar_uso_memoria():
-    memoria = psutil.virtual_memory()
-    print(f"Memoria RAM total: {memoria.total}")
-    print(f"Memoria RAM usada: {memoria.used }")
-    print(f"Porcentaje de uso: {memoria.percent} %")
+def clave_cpu(proceso):
+    return proceso.info['cpu_percent']
 
-def mostrar_uso_disco():
-    if os.name == 'nt':  
-        particion = 'C:\\'
-    else:  
-        particion = '/'
-    disco = psutil.disk_usage(particion)
-    print(f"Espacio total en disco: {disco.total}")
-    print(f"Espacio usado: {disco.used}")
-    print(f"Porcentaje de uso: {disco.percent} %")
-
-def mostrar_numero_total_procesos():
-   
-    procesos = list(psutil.process_iter())
+def mostrar_info(procesos):
     total = len(procesos)
-    print(f"Número total de procesos: {total}")
+    print("Total de procesos en ejecución:", total)
     
     if total > 100:
         print("Alerta: demasiados procesos")
 
+    
+    procesos.sort(key=clave_cpu, reverse=True)
 
-print("INFORMACION DE ESTE SISTEMA QUE ESTOY USANDO AHORITA MISMO:\n")
-mostrar_uso_cpu()
-mostrar_uso_memoria()
-mostrar_uso_disco()
-mostrar_numero_total_procesos()
+    print("Top 3 procesos por uso de CPU:")
+    for proc in procesos[:3]:
+        nombre = proc.info['name']
+        pid = proc.info['pid']
+        cpu = proc.info['cpu_percent']
+        print(f"{nombre} (PID {pid}): {cpu}% CPU")
 
+def monitorear():
+    
+    obtener_procesos()  
+    time.sleep(2)       # Espera 2 segundos pero se cambia si quiere mas.
+    procesos = obtener_procesos()
+    mostrar_info(procesos)
+
+
+monitorear()
